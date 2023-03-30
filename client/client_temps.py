@@ -8,6 +8,6 @@ print(HOST)
 
 print(f"Received {request({'event': 'get uuid'}, HOST, PORT)!r}")
 
-request({'event': 'set temp', 'inside': 20, 'outside': 100}, HOST, PORT)
+request({'event': 'set temp', 'inside': 100, 'outside': 0}, HOST, PORT)
 
 # print(f"Received {request({'event': 'get inside temp'}, HOST, PORT)!r}")

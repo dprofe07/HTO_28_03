@@ -98,17 +98,18 @@ class Server:
                 request({'window': 'close', 'fan': 'off'}, self.move_client_ip, 65431)
                 # todo выключить вентилятор
             else:
-                if self.inside_temp < self.outside_temp:
+                if self.inside_temp < 18 < self.outside_temp:
                     request({'window': 'open', 'fan': 'off'}, self.move_client_ip, 65431)
                     # todo открыть форточку
                     # todo выключить вентилятор
                     pass
-                elif self.inside_temp > self.outside_temp:
-                    request({'window': 'close', 'fan': 'on'}, self.move_client_ip, 65431)
+                elif self.inside_temp > 24 > self.outside_temp:
+                    request({'window': 'open', 'fan': 'on'}, self.move_client_ip, 65431)
                     # todo закрыть форточку
                     # todo включить вентилятор
                     pass
                 else:
+                    print('BAD')
                     request({'window': 'close', 'fan': 'off'}, self.move_client_ip, 65431)
 
     def get_uuid(self, conn, addr, data):
