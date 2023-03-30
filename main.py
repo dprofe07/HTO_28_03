@@ -59,7 +59,13 @@ class Client:
                 fan.on()
             else:
                 fan.off()
+
+            if json_res['window'] == 'open':
+                serv.duty(115)
+            else:
+                serv.duty(40)
             time.sleep(0.1)
+            conn.close()
 
 
 cl = Client()

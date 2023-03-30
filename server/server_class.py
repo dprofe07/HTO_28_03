@@ -9,6 +9,7 @@ from client_funcs import request
 class Server:
     def __init__(self, host, port, uuid):
         self.do_loop = True
+        self.do_mainloop = True
         self.inside_temp = 20.0
         self.outside_temp = 8.0
         self.uuid = uuid
@@ -30,7 +31,6 @@ class Server:
 
         threading.Thread(target=self.loop_tcp).start()
         threading.Thread(target=self.loop_broadcast).start()
-        threading.Thread(target=self.loop_main).start()
 
     def kill(self):
         self.do_loop = False
@@ -51,6 +51,10 @@ class Server:
                 if got_data['moving']:
                     self.move_client_ip = addr[0]
                     print('FOUND MOVE CLIENT 1')
+                    self.do_mainloop = False
+                    time.sleep(2)
+                    self.do_mainloop = True
+                    threading.Thread(target=self.loop_main).start()
                 data = json.dumps({
                     'role': 'server',
                 })
@@ -85,8 +89,9 @@ class Server:
         while self.move_client_ip is None:
             time.sleep(1)
         print('FOUND MOVE CLIENT 2')
-        while self.do_loop:
+        while self.do_mainloop:
             time.sleep(1)
+            print(f'LOOP, {self.inside_temp=}, {self.outside_temp=}')
 
             if 18 <= self.inside_temp <= 24:
                 print('GOOD')

@@ -53,7 +53,8 @@ def find_server(moving=False):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
     s.setsockopt(socket.SOL_SOCKET, 32, 1)
     s.bind(("0.0.0.0", 0))
-    s.sendto(json.dumps(data).encode('utf-8'), ("255.255.255.255", 65432))
+    for i in range(10):
+        s.sendto(json.dumps(data).encode('utf-8'), ("255.255.255.255", 65432))
     print('Recving data')
     try:
         data, addr = s.recvfrom(1024)

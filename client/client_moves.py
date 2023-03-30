@@ -3,7 +3,7 @@ import socket
 import threading
 import time
 
-from client.client_funcs import find_server
+from client_funcs import find_server
 
 
 class Client:
