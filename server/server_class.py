@@ -106,7 +106,7 @@ class Server:
                     # todo открыть форточку
                     # todo выключить вентилятор
                     pass
-                elif self.inside_temp > 24 > self.outside_temp:
+                elif self.inside_temp > self.outside_temp:
                     request({'window': 'open', 'fan': 'on'}, self.move_client_ip, 65431)
                     # todo закрыть форточку
                     # todo включить вентилятор

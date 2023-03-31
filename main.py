@@ -1,42 +1,74 @@
 import time
+
 import machine
-
-temp1 = machine.ADC(machine.Pin(25))#, atten=machine.ADC.ATTN_11DB)
-temp1.atten(machine.ADC.ATTN_11DB)
-
-temp2 = machine.ADC(machine.Pin(26))#, atten=machine.ADC.ATTN_11DB)
-temp2.atten(machine.ADC.ATTN_11DB)
-
-
-from client_funcs import request, find_server
-
-
 import network
+import json
+import socket
+import time
+
+from client_funcs import find_server
+
+
+serv = machine.PWM(machine.Pin(27), freq=50)
+fan = machine.Pin(26, machine.Pin.OUT)
+
 
 wlan_sta = network.WLAN(network.STA_IF)
 wlan_sta.active(False)
 wlan_sta.active(True)
 wlan_sta.connect("smartpark_service", "smartpark_2021")
-
+#wlan_sta.connect("LEGION-WIFI", "&&&&&&&&")
 while not wlan_sta.isconnected():
     print('Connecting...')
     time.sleep(1)
 print(wlan_sta.status())
 
 
-serv_ip = find_server()
+class Client:
+    def __init__(self):
+        self.do_loop = True
+
+        self.serv_ip = find_server(True)
+        print(self.serv_ip)
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.bind(('0.0.0.0', 65431))
+
+    def kill(self):
+        self.do_loop = False
+
+    def loop(self):
+        while self.do_loop:
+            self.sock.listen()
+            conn, addr = self.sock.accept()
+
+            res = ''
+
+            while True:
+                data = conn.recv(1024)
+                if not data:
+                    break
+                elif data.endswith(b"\1"):
+                    data = data[:-1]
+                    res += data.decode("utf-8")
+                    break
+                res += data.decode("utf-8")
+            print(res)
+            conn.send(json.dumps({'event': 'response'}).encode("utf-8"))
+            json_res = json.loads(res)
+            if json_res['fan'] == 'on':
+                fan.on()
+            else:
+                fan.off()
+
+            if json_res['window'] == 'open':
+                serv.duty(115)
+            else:
+                serv.duty(40)
+            time.sleep(0.1)
+            conn.close()
 
 
-def c_map(x, in_min, in_max, out_min, out_max):
-    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
-
-
-while True:
-    inside = c_map(temp1.read(), 0, 4095, 0, 3300) / 10 - 273
-    outside = c_map(temp2.read(), 0, 4095, 0, 3300) / 10 - 273
-    print(inside, outside)
-    #request({'event': 'set temp', 'inside': inside, 'outside': outside}, serv_ip, 65432)
-
-    time.sleep(1)
+cl = Client()
+cl.loop()
 
 

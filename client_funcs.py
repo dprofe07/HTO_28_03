@@ -9,23 +9,24 @@ count = 0
 
 def request(data, host, port):
     text = json.dumps(data) + "\1"
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        try:
-            s.connect((host, port))
-        except ConnectionRefusedError:
-            return None
-        s.send(text.encode('utf-8'))
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        s.connect((host, port))
+    except OSError:
+        return None
+    s.send(text.encode('utf-8'))
 
-        res = ""
-        while True:
-            data = s.recv(1024)
-            if not data:
-                break
-            elif data.endswith(b"\1"):
-                data = data[:-1]
-                res += data.decode("utf-8")
-                break
+    res = ""
+    while True:
+        data = s.recv(1024)
+        if not data:
+            break
+        elif data.endswith(b"\1"):
+            data = data[:-1]
             res += data.decode("utf-8")
+            break
+        res += data.decode("utf-8")
+    s.close()
     return res
 
 
@@ -44,7 +45,7 @@ def check_address(address, saver):
         print(f'FOUND: {address}')
 
 
-def find_server(moving=False):
+def find_server(moving=False, ip=None):
     data = {
         'event': 'finding_server',
         'moving': moving,
@@ -52,7 +53,7 @@ def find_server(moving=False):
     }
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
     s.setsockopt(socket.SOL_SOCKET, 32, 1)
-    s.bind(("0.0.0.0", 0))
+    s.bind(('', 0))
     for i in range(10):
         s.sendto(json.dumps(data).encode('utf-8'), ("255.255.255.255", 65432))
     print('Recving data')
