@@ -122,14 +122,21 @@ class Server:
                         request({'window': 'close', 'fan': 'off'}, self.move_client_ip, 65431)
             except:
                 print('Unknown error')
+
     def get_uuid(self, conn, addr, data):
-        print('MY UUID IS ' + str(self.uuid))
-        self.send({'uuid': self.uuid, 'event': 'response'}, conn)
+        try:
+            print('MY UUID IS ' + str(self.uuid))
+            self.send({'uuid': self.uuid, 'event': 'response'}, conn)
+        except:
+            print('Unknown error')
 
     def set_temp(self, conn, addr, data):
         self.inside_temp = data.get('inside', self.inside_temp)
         self.outside_temp = data.get('outside', self.outside_temp)
-        self.send({'good': 'ok', 'event': 'response'}, conn)
+        try:
+            self.send({'good': 'ok', 'event': 'response'}, conn)
+        except:
+            print('Unknown error')
 
     def get_temp(self, conn, addr, data):
         conn.send(bytes(str({'event': 'response', 'inside': self.inside_temp, 'outside': self.outside_temp}), 'utf-8'))
