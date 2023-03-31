@@ -44,77 +44,84 @@ class Server:
         conn.send(text.encode('utf-8'))
 
     def loop_broadcast(self):
-
         while self.do_loop:
-            text, addr = self.sock_broadcast.recvfrom(1024)
-            got_data = json.loads(text.decode('utf-8'))
-            if got_data['event'] == 'finding_server':
-                print('FINDING SERVER')
-                if got_data['moving']:
-                    self.move_client_ip = addr[0]
-                    print('FOUND MOVE CLIENT 1')
-                    self.do_mainloop = False
-                    time.sleep(2)
-                    self.do_mainloop = True
-                    threading.Thread(target=self.loop_main).start()
-                data = json.dumps({
-                    'role': 'server',
-                })
-                self.sock_broadcast.sendto(data.encode('utf-8'), addr)
+            try:
+                text, addr = self.sock_broadcast.recvfrom(1024)
+                got_data = json.loads(text.decode('utf-8'))
+                if got_data['event'] == 'finding_server':
+                    print('FINDING SERVER')
+                    if got_data['moving']:
+                        self.move_client_ip = addr[0]
+                        print('FOUND MOVE CLIENT 1')
+                        self.do_mainloop = False
+                        time.sleep(2)
+                        self.do_mainloop = True
+                        threading.Thread(target=self.loop_main).start()
+                    data = json.dumps({
+                        'role': 'server',
+                    })
+                    self.sock_broadcast.sendto(data.encode('utf-8'), addr)
+            except:
+                print('Unknown error')
 
     def loop_tcp(self):
         print('Ready')
         while self.do_loop:
-            time.sleep(0.1)
-            self.sock.listen()
-            conn, addr = self.sock.accept()
+            try:
+                time.sleep(0.1)
+                self.sock.listen()
+                conn, addr = self.sock.accept()
 
-            with conn:
-                print(f"Connected by {addr}")
-                res = ""
-                while True:
-                    data = conn.recv(1024)
-                    if not data:
-                        break
-                    elif data.endswith(b"\1"):
-                        data = data[:-1]
+                with conn:
+                    print(f"Connected by {addr}")
+                    res = ""
+                    while True:
+                        data = conn.recv(1024)
+                        if not data:
+                            break
+                        elif data.endswith(b"\1"):
+                            data = data[:-1]
+                            res += data.decode("utf-8")
+                            break
                         res += data.decode("utf-8")
-                        break
-                    res += data.decode("utf-8")
-                print(f'GOT: {res}')
-                json_res = json.loads(res)
-                if json_res['event'] in self.handlers:
-                    self.handlers[json_res['event']](conn, addr, json_res)
-                else:
-                    print('GOT UNKNOWN MESSAGE')
+                    print(f'GOT: {res}')
+                    json_res = json.loads(res)
+                    if json_res['event'] in self.handlers:
+                        self.handlers[json_res['event']](conn, addr, json_res)
+                    else:
+                        print('GOT UNKNOWN MESSAGE')
+            except:
+                print('Unknown error')
 
     def loop_main(self):
         while self.move_client_ip is None:
             time.sleep(1)
         print('FOUND MOVE CLIENT 2')
         while self.do_mainloop:
-            time.sleep(1)
-            print(f'LOOP, {self.inside_temp=}, {self.outside_temp=}')
+            try:
+                time.sleep(1)
+                print(f'LOOP, {self.inside_temp=}, {self.outside_temp=}')
 
-            if 18 <= self.inside_temp <= 24:
-                print('GOOD')
-                request({'window': 'close', 'fan': 'off'}, self.move_client_ip, 65431)
-                # todo выключить вентилятор
-            else:
-                if self.inside_temp < 18 < self.outside_temp:
-                    request({'window': 'open', 'fan': 'off'}, self.move_client_ip, 65431)
-                    # todo открыть форточку
-                    # todo выключить вентилятор
-                    pass
-                elif self.inside_temp > self.outside_temp:
-                    request({'window': 'open', 'fan': 'on'}, self.move_client_ip, 65431)
-                    # todo закрыть форточку
-                    # todo включить вентилятор
-                    pass
-                else:
-                    print('BAD')
+                if 18 <= self.inside_temp <= 24:
+                    print('GOOD')
                     request({'window': 'close', 'fan': 'off'}, self.move_client_ip, 65431)
-
+                    # todo выключить вентилятор
+                else:
+                    if self.inside_temp < 18 < self.outside_temp:
+                        request({'window': 'open', 'fan': 'off'}, self.move_client_ip, 65431)
+                        # todo открыть форточку
+                        # todo выключить вентилятор
+                        pass
+                    elif self.inside_temp > self.outside_temp:
+                        request({'window': 'open', 'fan': 'on'}, self.move_client_ip, 65431)
+                        # todo закрыть форточку
+                        # todo включить вентилятор
+                        pass
+                    else:
+                        print('BAD')
+                        request({'window': 'close', 'fan': 'off'}, self.move_client_ip, 65431)
+            except:
+                print('Unknown error')
     def get_uuid(self, conn, addr, data):
         print('MY UUID IS ' + str(self.uuid))
         self.send({'uuid': self.uuid, 'event': 'response'}, conn)
