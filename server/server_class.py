@@ -111,6 +111,7 @@ class Server:
                         if self.outside_temp > self.inside_temp:
                             request({'window': 'open', 'fan': 'off'}, self.move_client_ip, 65431)
                         else:
+                            print('BAD')
                             request({'window': 'close', 'fan': 'off'}, self.move_client_ip, 65431)
                     else:
                         if self.inside_temp > self.outside_temp:
