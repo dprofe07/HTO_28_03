@@ -44,10 +44,12 @@ class Server:
         conn.send(text.encode('utf-8'))
 
     def loop_broadcast(self):
+
         while self.do_loop:
             text, addr = self.sock_broadcast.recvfrom(1024)
             got_data = json.loads(text.decode('utf-8'))
             if got_data['event'] == 'finding_server':
+                print('FINDING SERVER')
                 if got_data['moving']:
                     self.move_client_ip = addr[0]
                     print('FOUND MOVE CLIENT 1')
@@ -61,6 +63,7 @@ class Server:
                 self.sock_broadcast.sendto(data.encode('utf-8'), addr)
 
     def loop_tcp(self):
+        print('Ready')
         while self.do_loop:
             time.sleep(0.1)
             self.sock.listen()
@@ -126,4 +129,3 @@ class Server:
 
 
 server = Server('', 65432, 10005789)
-#server.mainloop()
